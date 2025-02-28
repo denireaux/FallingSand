@@ -7,7 +7,7 @@ namespace FallingSand.ParticleTypes
     {
         
         private float sinkTimer = 0f;
-        private const float SinkDelay = 0.25f; // 250ms delay in seconds
+        private const float SinkDelay = 0.25f;
         
         public SandParticle(int x, int y) : base(x, y)
         {
@@ -30,48 +30,45 @@ namespace FallingSand.ParticleTypes
 
         public override void MoveSelf(Particle[,] grid, int newX, int newY)
         {
-            // Boundary check to ensure we're not going out of grid bounds
-            if (newX < 0 || newX >= grid.GetLength(0) || newY < 0 || newY >= grid.GetLength(1)) { return; }
+            // Boundary check 
+            bool isInBounds = IsWithinBounds(grid, newX, newY);
+            if (!isInBounds) { return; }
 
-            // Take our particles nearby [left, right, above, below]
+
             Particle[] particlesNear = GetSurroundingParticles(grid);
-
-            // Isolate our left, right, and below
             Particle particleLeft = particlesNear[0];
             Particle particleRight = particlesNear[1];
             Particle particleBelow = particlesNear[3];
 
-            // Check the space directly below
+            // Down Movement
             if (particleBelow == null) { MoveDown(grid, X, Y + 1); }
 
+            // TODO: Fix non-sinking logic
+            // I don't know why this is happening
             else if (particleBelow is WaterParticle) 
             { 
                 MakeWetSand(grid); 
-                sinkTimer += 1f / 60f; // Assume 60 FPS, so add 1 frame's worth of time
+                sinkTimer += 1f / 60f;
                 if (sinkTimer >= SinkDelay)
                 {
-                    sinkTimer = 0f; // Reset timer after sinking step
+                    sinkTimer = 0f;
                     SinkIntoWater(grid, newX, newY);
                 }
                 return;
-
             } 
 
-            // Check if the particle can move diagonally down-right
+            // Handle downward+diagonal movement
+            // TODO: Refactor into class methods
+            // Potentially an abstract-class method, or a separate abstract class for just solid particles
             else if (X + 1 < grid.GetLength(0) && Y + 1 < grid.GetLength(1) && particleRight == null && grid[X + 1, Y + 1] == null) { MoveDownRight(grid); }
-
-            // Check if the particle can move diagonally down-left
             else if (X - 1 >= 0 && Y + 1 < grid.GetLength(1) && particleLeft == null && grid[X - 1, Y + 1] == null) { MoveDownLeft(grid); }
 
-            // Otherwise, the particle should remain in place
             else { return; }
         }
 
-        private void MakeWetSand(Particle[,] grid)
+        private bool IsWithinBounds(Particle[,] grid, int x, int y)
         {
-            // Create a new WetSandParticle
-            grid[X, Y] = null;
-            grid[X, Y] = new WetSandParticle(X, Y);
+            return x >= 0 && x < grid.GetLength(0) && y >= 0 && y < grid.GetLength(1);
         }
 
         private void MoveDown(Particle[,] grid, int newX, int newY)
@@ -98,9 +95,10 @@ namespace FallingSand.ParticleTypes
             Y++;
         }
 
-        private bool IsWithinBounds(Particle[,] grid, int x, int y)
+        private void MakeWetSand(Particle[,] grid)
         {
-            return x >= 0 && x < grid.GetLength(0) && y >= 0 && y < grid.GetLength(1);
+            grid[X, Y] = null;
+            grid[X, Y] = new WetSandParticle(X, Y);
         }
 
         private void SinkIntoWater(Particle[,] grid, int newX, int newY)
