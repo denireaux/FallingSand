@@ -129,9 +129,8 @@ namespace FallingSand.ParticleTypes
             {
                 if (particle != null && particle.isCold)
                 {
-                    // Create a new WaterParticle
                     MakeWater(grid);
-                    return; // Exit early since condensation has occurred
+                    return; 
                 }
             }
         }

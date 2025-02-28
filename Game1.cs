@@ -168,7 +168,8 @@ namespace FallingSand
             }
 
             // Remove inactive particles
-            activeParticles.RemoveAll(p => p.IsInactive());
+            // Removed, now the vapor works
+            // activeParticles.RemoveAll(p => p.IsInactive());
 
             base.Update(gameTime);
         }
