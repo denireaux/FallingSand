@@ -107,11 +107,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\dange\\projects\\FallingSand\\FallingSand\\FallingSand.csproj",
+      "projectUniqueName": "c:\\Users\\dange\\projects\\FallingSand\\FallingSand\\FallingSand.csproj",
       "projectName": "FallingSand",
-      "projectPath": "C:\\Users\\dange\\projects\\FallingSand\\FallingSand\\FallingSand.csproj",
+      "projectPath": "c:\\Users\\dange\\projects\\FallingSand\\FallingSand\\FallingSand.csproj",
       "packagesPath": "C:\\Users\\dange\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\dange\\projects\\FallingSand\\FallingSand\\obj\\",
+      "outputPath": "c:\\Users\\dange\\projects\\FallingSand\\FallingSand\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\dange\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -186,7 +186,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.308\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.309\\RuntimeIdentifierGraph.json"
       }
     }
   }

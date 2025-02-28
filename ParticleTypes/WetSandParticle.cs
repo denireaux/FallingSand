@@ -5,6 +5,9 @@ namespace FallingSand.ParticleTypes
 {
     public class WetSandParticle : Particle
     {
+        private float sinkTimer = 0f;
+        private const float SinkDelay = 0.25f; // 250ms delay in seconds
+
         public WetSandParticle(int x, int y) : base(x, y)
         {
             Velocity = 0f;
@@ -12,8 +15,7 @@ namespace FallingSand.ParticleTypes
 
         public override void Update(float gravity, Particle[,] grid)
         {
-            // Apply gravity to the velocity, but slower than dry sand
-            Velocity += gravity * 0.5f;
+            Velocity += gravity * 1.0f;
             int newY = (int)(Y + Velocity);
 
             if (newY >= Game1.gridHeight)
@@ -21,54 +23,81 @@ namespace FallingSand.ParticleTypes
 
             if (newY < Game1.gridHeight)
             {
-                if (grid[X, newY] == null || grid[X, newY] is WaterParticle)
-                {
-                    // Swap positions with water or move down if empty
-                    if (grid[X, newY] is WaterParticle)
-                    {
-                        // Swap positions
-                        grid[X, Y] = grid[X, newY];
-                        grid[X, newY].X = X;
-                        grid[X, newY].Y = Y;
-                    }
-                    else
-                    {
-                        grid[X, Y] = null;
-                    }
-
-                    Y = newY;
-                    grid[X, Y] = this;
-                }
-                else
-                {
-                    // Try sliding diagonally
-                    Random rand = new Random();
-                    int direction = rand.Next(0, 2) * 2 - 1;
-
-                    if (X + direction >= 0 && X + direction < Game1.gridWidth && Y + 1 < Game1.gridHeight)
-                    {
-                        if (grid[X + direction, Y + 1] == null || grid[X + direction, Y + 1] is WaterParticle)
-                        {
-                            if (grid[X + direction, Y + 1] is WaterParticle)
-                            {
-                                // Swap positions with water
-                                grid[X, Y] = grid[X + direction, Y + 1];
-                                grid[X + direction, Y + 1].X = X;
-                                grid[X + direction, Y + 1].Y = Y;
-                            }
-                            else
-                            {
-                                grid[X, Y] = null;
-                            }
-
-                            X += direction;
-                            Y += 1;
-                            grid[X, Y] = this;
-                        }
-                    }
-                }
+                MoveSelf(grid, X, Y + 1);
             }
         }
-        public override void MoveSelf(Particle[,] grid, int newX, int newY) {}
+
+        public override void MoveSelf(Particle[,] grid, int newX, int newY)
+        {
+            Particle[] surrounding = GetSurroundingParticles(grid);
+            Particle below = surrounding[3];
+
+            // If sinking into water, apply delay
+            if (below is WaterParticle)
+            {
+                sinkTimer += 1f / 60f; // Assume 60 FPS, so add 1 frame's worth of time
+                if (sinkTimer >= SinkDelay)
+                {
+                    sinkTimer = 0f; // Reset timer after sinking step
+                    SinkIntoWater(grid, newX, newY);
+                }
+                return;
+            }
+
+            // Regular falling behavior (no delay)
+            sinkTimer = 0f; // Reset sink timer when not in water
+            if (below == null)
+            {
+                MoveDown(grid, newX, newY);
+                return;
+            }
+
+            // Convert sand below into wet sand
+            if (below is SandParticle)
+            {
+                DampenBelow(grid);
+            }
+        }
+
+        private void SinkIntoWater(Particle[,] grid, int newX, int newY)
+        {
+            if (!IsWithinBounds(grid, newX, newY)) return;
+
+            Particle waterParticle = grid[newX, newY];
+
+            grid[X, Y] = waterParticle;
+            grid[newX, newY] = this;
+
+            if (waterParticle != null)
+            {
+                waterParticle.X = X;
+                waterParticle.Y = Y;
+            }
+
+            X = newX;
+            Y = newY;
+        }
+
+        private void DampenBelow(Particle[,] grid)
+        {
+            if (!IsWithinBounds(grid, X, Y + 1)) return;
+
+            grid[X, Y + 1] = new WetSandParticle(X, Y + 1);
+        }
+
+        private void MoveDown(Particle[,] grid, int newX, int newY)
+        {
+            if (!IsWithinBounds(grid, newX, newY)) return;
+
+            grid[X, Y] = null;
+            grid[newX, newY] = this;
+            X = newX;
+            Y = newY;
+        }
+
+        private bool IsWithinBounds(Particle[,] grid, int x, int y)
+        {
+            return x >= 0 && x < grid.GetLength(0) && y >= 0 && y < grid.GetLength(1);
+        }
     }
 }

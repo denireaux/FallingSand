@@ -5,6 +5,10 @@ namespace FallingSand.ParticleTypes
 {
     public class SandParticle : Particle
     {
+        
+        private float sinkTimer = 0f;
+        private const float SinkDelay = 0.25f; // 250ms delay in seconds
+        
         public SandParticle(int x, int y) : base(x, y)
         {
             Velocity = 0f;
@@ -27,10 +31,7 @@ namespace FallingSand.ParticleTypes
         public override void MoveSelf(Particle[,] grid, int newX, int newY)
         {
             // Boundary check to ensure we're not going out of grid bounds
-            if (newX < 0 || newX >= grid.GetLength(0) || newY < 0 || newY >= grid.GetLength(1))
-            {
-                return;
-            }
+            if (newX < 0 || newX >= grid.GetLength(0) || newY < 0 || newY >= grid.GetLength(1)) { return; }
 
             // Take our particles nearby [left, right, above, below]
             Particle[] particlesNear = GetSurroundingParticles(grid);
@@ -43,13 +44,24 @@ namespace FallingSand.ParticleTypes
             // Check the space directly below
             if (particleBelow == null) { MoveDown(grid, X, Y + 1); }
 
-            /* else if (particleBelow is WaterParticle) { MakeWetSand(grid); } */
+            else if (particleBelow is WaterParticle) 
+            { 
+                MakeWetSand(grid); 
+                sinkTimer += 1f / 60f; // Assume 60 FPS, so add 1 frame's worth of time
+                if (sinkTimer >= SinkDelay)
+                {
+                    sinkTimer = 0f; // Reset timer after sinking step
+                    SinkIntoWater(grid, newX, newY);
+                }
+                return;
+
+            } 
 
             // Check if the particle can move diagonally down-right
-            else if (particleRight == null && grid[X + 1, Y + 1] == null){ MoveDownRight(grid); }
+            else if (X + 1 < grid.GetLength(0) && Y + 1 < grid.GetLength(1) && particleRight == null && grid[X + 1, Y + 1] == null) { MoveDownRight(grid); }
 
             // Check if the particle can move diagonally down-left
-            else if (particleLeft == null && grid[X - 1, Y + 1] == null) { MoveDownLeft(grid); }
+            else if (X - 1 >= 0 && Y + 1 < grid.GetLength(1) && particleLeft == null && grid[X - 1, Y + 1] == null) { MoveDownLeft(grid); }
 
             // Otherwise, the particle should remain in place
             else { return; }
@@ -84,6 +96,30 @@ namespace FallingSand.ParticleTypes
             grid[X - 1, Y + 1] = this;
             X--;
             Y++;
+        }
+
+        private bool IsWithinBounds(Particle[,] grid, int x, int y)
+        {
+            return x >= 0 && x < grid.GetLength(0) && y >= 0 && y < grid.GetLength(1);
+        }
+
+        private void SinkIntoWater(Particle[,] grid, int newX, int newY)
+        {
+            if (!IsWithinBounds(grid, newX, newY)) return;
+
+            Particle waterParticle = grid[newX, newY];
+
+            grid[X, Y] = waterParticle;
+            grid[newX, newY] = this;
+
+            if (waterParticle != null)
+            {
+                waterParticle.X = X;
+                waterParticle.Y = Y;
+            }
+
+            X = newX;
+            Y = newY;
         }
     }
 }
