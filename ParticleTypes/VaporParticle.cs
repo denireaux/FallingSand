@@ -96,12 +96,28 @@ namespace FallingSand.ParticleTypes
 
         private void MakeWater(Particle[,] grid)
         {
-            // Delete existing SmokeParticle
+            // Ensure we're not replacing an existing water particle
+            if (grid[X, Y] is WaterParticle) return;
+
+            // Remove existing VaporParticle
             grid[X, Y] = null;
 
-            // Create a WaterParticle
-            grid[X, Y] = new WaterParticle(X, Y);
+            int newY = Y + 1; // Prefer placing water one cell below
+
+            // Ensure we stay in bounds and check if the space below is empty
+            if (newY < Game1.gridHeight && grid[X, newY] == null)
+            {
+                grid[X, newY] = new WaterParticle(X, newY);
+                Game1.AddActiveParticle(grid[X, newY]); // Ensure the new water particle updates
+            }
+            else
+            {
+                // If no empty space below, create water in place
+                grid[X, Y] = new WaterParticle(X, Y);
+                Game1.AddActiveParticle(grid[X, Y]);
+            }
         }
+
 
         private bool CheckAltitude()
         {

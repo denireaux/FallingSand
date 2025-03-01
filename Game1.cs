@@ -26,13 +26,19 @@ namespace FallingSand
         Dictionary<string, Color> particleColors;
         List<Particle> activeParticles = new List<Particle>(); // List of active particles for selective updating
 
+        // Static instance of Game1
+        public static Game1 instance;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            instance = this; // Set static instance
+
             // Set the target framerate
-            TargetElapsedTime = TimeSpan.FromSeconds(1.0f / 90.0f); // FPS
+            TargetElapsedTime = TimeSpan.FromSeconds(1.0f / 60.0f); // FPS
             _graphics.SynchronizeWithVerticalRetrace = false; // Disable VSync to allow the set framerate to be used
             _graphics.PreferredBackBufferWidth = gridWidth * cellSize;
             _graphics.PreferredBackBufferHeight = gridHeight * cellSize + 80; // Extra space for palette and labels
@@ -231,6 +237,15 @@ namespace FallingSand
                 case "Powder": return new GunpowderParticle(x, y);
                 case "Smoke": return new SmokeParticle(x, y);
                 default: return null;
+            }
+        }
+
+        // Static helper to ensure new particles are updated
+        public static void AddActiveParticle(Particle particle)
+        {
+            if (particle != null && !instance.activeParticles.Contains(particle))
+            {
+                instance.activeParticles.Add(particle);
             }
         }
     }
